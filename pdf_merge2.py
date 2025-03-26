@@ -1,45 +1,30 @@
+# this version uses pikepdf to merge pdfs. pikepdf will preserve some of the original document properties better than PyPDF2.
+import pikepdf
 import os
-from PyPDF2 import PdfMerger
 
 def merge_pdfs(input_directory, output_filename):
-    """
-    Merge all PDF files in the specified directory into a single PDF.
-
-    Args:
-    input_directory (str): Path to the directory containing PDF files to merge
-    output_filename (str): Name of the output merged PDF file
-
-    Returns:
-    bool: True if merge successful, False otherwise
-    """
+    """Merge PDFs while better preserving original document properties"""
     try:
-        # Create a PDF merger object
-        merger = PdfMerger()
-        print('created merger object')
-
-        # Get a list of PDF files in the directory
         pdf_files = [f for f in os.listdir(input_directory) if f.lower().endswith('.pdf')]
-        print(f'got list of pdf files: {pdf_files}')
-        # Sort the files to ensure consistent order
         pdf_files.sort()
-        print('sorted pdf files')
 
-        # Check if any PDF files were found
         if not pdf_files:
             print("No PDF files found in the specified directory.")
             return False
 
-        # Append each PDF file to the merger
-        print('found pdf files in directory')
+        # Create a new PDF
+        merged_pdf = pikepdf.Pdf.new()
+
+        # Add each PDF's pages to the merged PDF
         for pdf_file in pdf_files:
             file_path = os.path.join(input_directory, pdf_file)
-            merger.append(file_path)
+            print(f"Processing {pdf_file}")
 
-        # Write the merged PDF to the output file
-        with open(output_filename, 'wb') as output_file:
-            print('writing merged pdf')
-            merger.write(output_file)
+            with pikepdf.open(file_path) as pdf:
+                merged_pdf.pages.extend(pdf.pages)
 
+        # Save the merged PDF
+        merged_pdf.save(output_filename)
         print(f"Successfully merged {len(pdf_files)} PDF files into {output_filename}")
         return True
 
